@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>کلاس آنلاین</title>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
+  <script src="https://meet.jit.si/external_api.js"></script>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface2: #1a2236;
+      --border: #1e2d45;
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --card: #152035;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── LOBBY ── */
+    #lobby {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      background-image: radial-gradient(ellipse at 20% 50%, rgba(59,130,246,.15) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 20%, rgba(139,92,246,.1) 0%, transparent 50%);
+    }
+
+    .lobby-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 420px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5);
+      animation: slideUp .5s ease both;
+    }
+
+    @keyframes slideUp {
+      from { opacity:0; transform: translateY(30px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .lobby-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .lobby-logo .icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 32px rgba(59,130,246,.4);
+    }
+
+    .lobby-logo h1 { font-size: 26px; font-weight: 900; }
+    .lobby-logo p  { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    .role-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: var(--bg);
+      padding: 4px;
+      border-radius: 12px;
+    }
+
+    .role-tab {
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      transition: all .2s;
+    }
+
+    .role-tab.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 16px rgba(59,130,246,.4);
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .form-group input:focus { border-color: var(--accent); }
+
+    .join-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(59,130,246,.4);
+    }
+
+    .join-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(59,130,246,.5);
+    }
+
+    /* ── APP LAYOUT ── */
+    #app { display: none; flex-direction: column; height: 100vh; }
+
+    /* TOPBAR */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+
+    .room-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .live-dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: 6px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.5; transform:scale(1.4); }
+    }
+
+    .topbar-center {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .participants-count {
+      background: var(--accent);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .topbar-right { display: flex; gap: 8px; }
+
+    .top-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .top-btn:hover { background: var(--border); }
+    .top-btn.danger { background: rgba(239,68,68,.15); border-color: var(--red); color: var(--red); }
+    .top-btn.danger:hover { background: var(--red); color: white; }
+
+    /* MAIN */
+    .main-area {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* VIDEO */
+    .video-section {
+      display: flex;
+      flex-direction: column;
+      background: #050810;
+      position: relative;
+    }
+
+    #jitsi-container {
+      flex: 1;
+      width: 100%;
+    }
+
+    /* Controls */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .ctrl-btn {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+      position: relative;
+    }
+
+    .ctrl-btn.on  { background: var(--surface2); border: 1.5px solid var(--border); }
+    .ctrl-btn.off { background: var(--red); box-shadow: 0 4px 16px rgba(239,68,68,.4); }
+    .ctrl-btn:hover { transform: scale(1.08); }
+
+    .ctrl-btn .tooltip {
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.9);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+
+    .ctrl-btn:hover .tooltip { opacity: 1; }
+
+    .ctrl-end {
+      width: auto;
+      padding: 0 20px;
+      border-radius: 14px;
+      background: var(--red);
+      color: white;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(239,68,68,.4);
+    }
+
+    /* SIDE PANEL */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .panel-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-tab {
+      padding: 12px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .2s;
+    }
+
+    .panel-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(59,130,246,.05);
+    }
+
+    /* PARTICIPANTS */
+    #participants-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    #participants-panel::-webkit-scrollbar { width: 4px; }
+    #participants-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .participant-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      transition: background .2s;
+    }
+
+    .participant-item:hover { background: var(--surface2); }
+
+    .p-avatar {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .p-avatar.teacher { background: linear-gradient(135deg, var(--yellow), #f97316); }
+
+    .p-info { flex: 1; min-width: 0; }
+    .p-name { font-size: 13px; font-weight: 600; }
+    .p-role { font-size: 11px; color: var(--muted); }
+
+    .p-controls { display: flex; gap: 4px; }
+
+    .p-btn {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      border: none;
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+
+    .p-btn:hover { background: var(--border); }
+    .p-btn.muted { background: rgba(239,68,68,.2); color: var(--red); }
+
+    /* CHAT */
+    #chat-panel {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #chat-panel.active { display: flex; }
+    #participants-panel.hidden { display: none; }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .chat-msg {
+      animation: msgIn .3s ease both;
+    }
+
+    @keyframes msgIn {
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .chat-msg.own { align-self: flex-end; text-align: left; }
+
+    .msg-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .msg-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .msg-name.teacher-name { color: var(--yellow); }
+
+    .msg-time {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .msg-bubble {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 12px 12px 12px 3px;
+      font-size: 13px;
+      line-height: 1.5;
+      max-width: 240px;
+      word-break: break-word;
+    }
+
+    .chat-msg.own .msg-bubble {
+      background: rgba(59,130,246,.2);
+      border-color: rgba(59,130,246,.4);
+      border-radius: 12px 12px 3px 12px;
+    }
+
+    .chat-msg.own .msg-header { justify-content: flex-end; }
+
+    .chat-input-area {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      resize: none;
+      transition: border-color .2s;
+    }
+
+    .chat-input:focus { border-color: var(--accent); }
+
+    .send-btn {
+      width: 42px; height: 42px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 16px rgba(59,130,246,.4); }
+
+    /* TEACHER CONTROLS */
+    .teacher-controls {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .teacher-controls-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .teacher-ctrl-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .t-ctrl-btn {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      gap: 5px;
+      transition: all .2s;
+    }
+
+    .t-ctrl-btn:hover { background: var(--border); }
+    .t-ctrl-btn.danger { border-color: rgba(239,68,68,.4); color: var(--red); }
+    .t-ctrl-btn.danger:hover { background: var(--red); color: white; border-color: var(--red); }
+    .t-ctrl-btn.success { border-color: rgba(16,185,129,.4); color: var(--green); }
+    .t-ctrl-btn.success:hover { background: var(--green); color: white; border-color: var(--green); }
+
+    /* TOAST */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      animation: toastIn .3s ease both;
+    }
+
+    @keyframes toastIn {
+      from { opacity:0; transform:translateY(-10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .toast.success { border-color: var(--green); color: var(--green); }
+    .toast.info    { border-color: var(--accent); color: var(--accent); }
+    .toast.warning { border-color: var(--yellow); color: var(--yellow); }
+
+    /* BADGE UNREAD */
+    .unread-badge {
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+      margin-right: 4px;
+    }
+
+    /* Waiting message */
+    .waiting-msg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--muted);
+      gap: 12px;
+    }
+
+    .waiting-msg .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ── LOBBY ── -->
+<div id="lobby">
+  <div class="lobby-card">
+    <div class="lobby-logo">
+      <div class="icon">🎓</div>
+      <h1>کلاس آنلاین</h1>
+      <p>پلتفرم آموزش تعاملی</p>
+    </div>
+
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="setRole('teacher')">👨‍🏫 استاد</button>
+      <button class="role-tab" onclick="setRole('student')">👨‍🎓 دانش‌آموز</button>
+    </div>
+
+    <div class="form-group">
+      <label>نام شما</label>
+      <input type="text" id="username" placeholder="نام خود را وارد کنید" />
+    </div>
+
+    <div class="form-group">
+      <label>کد کلاس</label>
+      <input type="text" id="roomcode" placeholder="مثال: math-101" value="online-class-2025" />
+    </div>
+
+    <div class="form-group" id="teacher-pass-group">
+      <label>رمز استاد</label>
+      <input type="password" id="teacherpass" placeholder="رمز ورود استاد" value="teacher123"/>
+    </div>
+
+    <button class="join-btn" onclick="joinClass()">🚀 ورود به کلاس</button>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span style="font-size:22px">🎓</span>
+      <div class="room-badge">
+        <span class="live-dot"></span>
+        <span id="room-name-display">کلاس</span>
+      </div>
+    </div>
+    <div class="topbar-center">
+      <span id="user-display">کاربر</span>
+      <span class="participants-count" id="p-count">1 نفر</span>
+    </div>
+    <div class="topbar-right">
+      <button class="top-btn" onclick="copyInvite()">🔗 دعوت</button>
+      <button class="top-btn danger" onclick="leaveClass()">📴 خروج</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-area">
+
+    <!-- VIDEO -->
+    <div class="video-section">
+      <div id="jitsi-container">
+        <div class="waiting-msg">
+          <div class="spinner"></div>
+          <span>در حال اتصال به کلاس...</span>
+        </div>
+      </div>
+      <!-- CONTROLS -->
+      <div class="controls-bar">
+        <button class="ctrl-btn on" id="mic-btn" onclick="toggleMic()">
+          🎤
+          <span class="tooltip">قطع/وصل میکروفون</span>
+        </button>
+        <button class="ctrl-btn on" id="cam-btn" onclick="toggleCam()">
+          📷
+          <span class="tooltip">قطع/وصل دوربین</span>
+        </button>
+        <button class="ctrl-btn on" id="screen-btn" onclick="toggleScreen()">
+          🖥️
+          <span class="tooltip">اشتراک صفحه</span>
+        </button>
+        <button class="ctrl-btn on" id="hand-btn" onclick="raiseHand()">
+          ✋
+          <span class="tooltip">بلند کردن دست</span>
+        </button>
+        <button class="ctrl-btn ctrl-end" onclick="leaveClass()">
+          📴 پایان
+          <span class="tooltip">ترک کلاس</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div class="side-panel">
+      <div class="panel-tabs">
+        <button class="panel-tab active" id="tab-participants" onclick="switchTab('participants')">👥 شرکت‌کنندگان</button>
+        <button class="panel-tab" id="tab-chat" onclick="switchTab('chat')">💬 چت <span id="unread-badge" class="unread-badge" style="display:none">0</span></button>
+      </div>
+
+      <!-- PARTICIPANTS -->
+      <div id="participants-panel">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- CHAT -->
+      <div id="chat-panel">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chat-input" rows="1" placeholder="پیام بنویسید..." onkeydown="chatKeydown(event)"></textarea>
+          <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+
+      <!-- TEACHER CONTROLS (only shown to teacher) -->
+      <div class="teacher-controls" id="teacher-controls" style="display:none">
+        <div class="teacher-controls-title">⚙️ کنترل کلاس</div>
+        <div class="teacher-ctrl-btns">
+          <button class="t-ctrl-btn danger" onclick="muteAll()">🔇 بی‌صدا همه</button>
+          <button class="t-ctrl-btn success" onclick="unmuteAll()">🔊 صدا همه</button>
+          <button class="t-ctrl-btn" onclick="disableCamsAll()">📵 خاموش دوربین‌ها</button>
+          <button class="t-ctrl-btn" onclick="enableCamsAll()">📷 روشن دوربین‌ها</button>
+          <button class="t-ctrl-btn danger" onclick="kickStudent()">🚫 اخراج دانش‌آموز</button>
+          <button class="t-ctrl-btn" onclick="lockRoom()">🔒 قفل کلاس</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+  let role = 'teacher';
+  let micOn = true, camOn = true, screenOn = false, handRaised = false;
+  let jitsiApi = null;
+  let currentUser = '';
+  let currentRoom = '';
+  let unreadCount = 0;
+  let activeTab = 'participants';
+
+  // Simulated participants
+  let participants = [];
+
+  function setRole(r) {
+    role = r;
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('teacher-pass-group').style.display = r === 'teacher' ? 'block' : 'none';
+  }
+
+  function joinClass() {
+    const name = document.getElementById('username').value.trim();
+    const room = document.getElementById('roomcode').value.trim();
+    const pass = document.getElementById('teacherpass').value.trim();
+
+    if (!name) { showToast('لطفاً نام خود را وارد کنید', 'warning'); return; }
+    if (!room)  { showToast('لطفاً کد کلاس را وارد کنید', 'warning'); return; }
+    if (role === 'teacher' && pass !== 'teacher123') {
+      showToast('رمز استاد اشتباه است!', 'warning'); return;
+    }
+
+    currentUser = name;
+    currentRoom = room;
+
+    document.getElementById('lobby').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('room-name-display').textContent = room;
+    document.getElementById('user-display').textContent = (role === 'teacher' ? '👨‍🏫 ' : '👨‍🎓 ') + name;
+
+    if (role === 'teacher') {
+      document.getElementById('teacher-controls').style.display = 'block';
+    }
+
+    // Add self to participants
+    participants.push({ name, role, micOn: true, camOn: true });
+    renderParticipants();
+
+    // Add welcome message
+    addSystemMessage('به کلاس خوش آمدید! 🎉');
+
+    initJitsi(name, room);
+    showToast('✅ با موفقیت وارد کلاس شدید', 'success');
+  }
+
+  function initJitsi(name, room) {
+    const container = document.getElementById('jitsi-container');
+    container.innerHTML = '';
+
+    const domain = 'meet.jit.si';
+    const options = {
+      roomName: 'online-classroom-' + room.replace(/\s+/g, '-'),
+      width: '100%',
+      height: '100%',
+      parentNode: container,
+      userInfo: { displayName: (role === 'teacher' ? '👨‍🏫 ' : '👨‍🎓 ') + name },
+      configOverwrite: {
+        startWithAudioMuted: false,
+        startWithVideoMuted: false,
+        disableDeepLinking: true,
+        enableNoisyMicDetection: true,
+        prejoinPageEnabled: false,
+      },
+      interfaceConfigOverwrite: {
+        TOOLBAR_BUTTONS: [],
+        SHOW_JITSI_WATERMARK: false,
+        SHOW_BRAND_WATERMARK: false,
+        DEFAULT_BACKGROUND: '#0a0e1a',
+        DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
+      }
+    };
+
+    try {
+      jitsiApi = new JitsiMeetExternalAPI(domain, options);
+
+      jitsiApi.addEventListener('participantJoined', (e) => {
+        const pName = e.displayName || 'دانش‌آموز';
+        participants.push({ name: pName, role: 'student', micOn: true, camOn: true, id: e.id });
+        renderParticipants();
+        addSystemMessage(`${pName} وارد کلاس شد 👋`);
+        showToast(`${pName} وارد شد`, 'info');
+        updateCount();
+      });
+
+      jitsiApi.addEventListener('participantLeft', (e) => {
+        participants = participants.filter(p => p.id !== e.id);
+        renderParticipants();
+        updateCount();
+      });
+
+      jitsiApi.addEventListener('audioMuteStatusChanged', (e) => {
+        // update local state
+        micOn = !e.muted;
+        document.getElementById('mic-btn').className = 'ctrl-btn ' + (micOn ? 'on' : 'off');
+        document.getElementById('mic-btn').textContent = micOn ? '🎤' : '🔇';
+      });
+
+      jitsiApi.addEventListener('videoMuteStatusChanged', (e) => {
+        camOn = !e.muted;
+        document.getElementById('cam-btn').className = 'ctrl-btn ' + (camOn ? 'on' : 'off');
+        document.getElementById('cam-btn').textContent = camOn ? '📷' : '📵';
+      });
+
+      updateCount();
+    } catch(err) {
+      container.innerHTML = `<div class="waiting-msg">
+        <span style="font-size:48px">⚠️</span>
+        <span>خطا در اتصال به Jitsi</span>
+        <span style="font-size:12px;color:var(--muted)">${err.message}</span>
+      </div>`;
+    }
+  }
+
+  function updateCount() {
+    document.getElementById('p-count').textContent = participants.length + ' نفر';
+  }
+
+  function renderParticipants() {
+    const panel = document.getElementById('participants-panel');
+    panel.innerHTML = '';
+    participants.forEach((p, i) => {
+      const isTeacher = p.role === 'teacher';
+      const initial = p.name.charAt(0);
+      const canControl = role === 'teacher' && !isTeacher;
+
+      panel.innerHTML += `
+        <div class="participant-item">
+          <div class="p-avatar ${isTeacher ? 'teacher' : ''}">${initial}</div>
+          <div class="p-info">
+            <div class="p-name">${p.name} ${isTeacher ? '👨‍🏫' : ''}</div>
+            <div class="p-role">${isTeacher ? 'استاد' : 'دانش‌آموز'}</div>
+          </div>
+          <div class="p-controls">
+            <span title="میکروفون">${p.micOn ? '🎤' : '🔇'}</span>
+            <span title="دوربین">${p.camOn ? '📷' : '📵'}</span>
+            ${canControl ? `<button class="p-btn muted" onclick="muteParticipant(${i})" title="بی‌صدا">🔇</button>` : ''}
+          </div>
+        </div>
+      `;
+    });
+    updateCount();
+  }
+
+  // ── CONTROLS ──
+  function toggleMic() {
+    if (jitsiApi) jitsiApi.executeCommand('toggleAudio');
+    else {
+      micOn = !micOn;
+      document.getElementById('mic-btn').className = 'ctrl-btn ' + (micOn ? 'on' : 'off');
+      document.getElementById('mic-btn').textContent = micOn ? '🎤' : '🔇';
+    }
+  }
+
+  function toggleCam() {
+    if (jitsiApi) jitsiApi.executeCommand('toggleVideo');
+    else {
+      camOn = !camOn;
+      document.getElementById('cam-btn').className = 'ctrl-btn ' + (camOn ? 'on' : 'off');
+      document.getElementById('cam-btn').textContent = camOn ? '📷' : '📵';
+    }
+  }
+
+  function toggleScreen() {
+    if (jitsiApi) jitsiApi.executeCommand('toggleShareScreen');
+    screenOn = !screenOn;
+    document.getElementById('screen-btn').className = 'ctrl-btn ' + (screenOn ? 'off' : 'on');
+    showToast(screenOn ? '🖥️ اشتراک‌گذاری صفحه شروع شد' : '🖥️ اشتراک‌گذاری متوقف شد', 'info');
+  }
+
+  function raiseHand() {
+    if (jitsiApi) jitsiApi.executeCommand('toggleRaiseHand');
+    handRaised = !handRaised;
+    document.getElementById('hand-btn').className = 'ctrl-btn ' + (handRaised ? 'off' : 'on');
+    showToast(handRaised ? '✋ دستت بلند شد' : '✋ دستت پایین آمد', 'info');
+  }
+
+  // ── TEACHER CONTROLS ──
+  function muteAll() {
+    if (jitsiApi) jitsiApi.executeCommand('muteEveryone');
+    participants.forEach(p => { if (p.role !== 'teacher') p.micOn = false; });
+    renderParticipants();
+    addSystemMessage('📢 استاد همه را بی‌صدا کرد');
+    showToast('🔇 همه بی‌صدا شدند', 'warning');
+  }
+
+  function unmuteAll() {
+    participants.forEach(p => p.micOn = true);
+    renderParticipants();
+    addSystemMessage('📢 استاد به همه اجازه صحبت داد');
+    showToast('🔊 همه صدا دارند', 'success');
+  }
+
+  function disableCamsAll() {
+    participants.forEach(p => { if (p.role !== 'teacher') p.camOn = false; });
+    renderParticipants();
+    addSystemMessage('📢 استاد دوربین‌ها را خاموش کرد');
+    showToast('📵 دوربین‌ها خاموش شدند', 'warning');
+  }
+
+  function enableCamsAll() {
+    participants.forEach(p => p.camOn = true);
+    renderParticipants();
+    showToast('📷 دوربین‌ها روشن شدند', 'success');
+  }
+
+  function kickStudent() {
+    const students = participants.filter(p => p.role === 'student');
+    if (students.length === 0) { showToast('دانش‌آموزی در کلاس نیست', 'warning'); return; }
+    const names = students.map((s,i) => `${i+1}. ${s.name}`).join('\n');
+    const idx = prompt(`کدام دانش‌آموز را اخراج کنید؟\n${names}\nشماره را وارد کنید:`);
+    if (idx && students[parseInt(idx)-1]) {
+      const kicked = students[parseInt(idx)-1];
+      if (jitsiApi) jitsiApi.executeCommand('kickParticipant', kicked.id);
+      participants = participants.filter(p => p !== kicked);
+      renderParticipants();
+      addSystemMessage(`🚫 ${kicked.name} از کلاس اخراج شد`);
+      showToast(`🚫 ${kicked.name} اخراج شد`, 'warning');
+    }
+  }
+
+  function lockRoom() {
+    if (jitsiApi) jitsiApi.executeCommand('toggleLobby', true);
+    showToast('🔒 کلاس قفل شد - ورود جدید ممنوع', 'warning');
+    addSystemMessage('🔒 استاد کلاس را قفل کرد');
+  }
+
+  function muteParticipant(i) {
+    participants[i].micOn = false;
+    renderParticipants();
+    showToast(`🔇 ${participants[i].name} بی‌صدا شد`, 'info');
+  }
+
+  // ── CHAT ──
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+
+    if (tab === 'chat') {
+      document.getElementById('participants-panel').classList.add('hidden');
+      document.getElementById('chat-panel').classList.add('active');
+      unreadCount = 0;
+      document.getElementById('unread-badge').style.display = 'none';
+      document.getElementById('unread-badge').textContent = '0';
+      setTimeout(() => {
+        const msgs = document.getElementById('chat-messages');
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 50);
+    } else {
+      document.getElementById('participants-panel').classList.remove('hidden');
+      document.getElementById('chat-panel').classList.remove('active');
+    }
+  }
+
+  function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const msgs = document.getElementById('chat-messages');
+    const now = new Date().toLocaleTimeString('fa-IR', { hour:'2-digit', minute:'2-digit' });
+
+    if (jitsiApi) {
+      jitsiApi.executeCommand('sendChatMessage', text);
+    }
+
+    msgs.innerHTML += `
+      <div class="chat-msg own">
+        <div class="msg-header">
+          <span class="msg-time">${now}</span>
+          <span class="msg-name ${role === 'teacher' ? 'teacher-name' : ''}">${currentUser} ${role === 'teacher' ? '👨‍🏫' : ''}</span>
+        </div>
+        <div class="msg-bubble">${escapeHtml(text)}</div>
+      </div>
+    `;
+    msgs.scrollTop = msgs.scrollHeight;
+    input.value = '';
+    input.style.height = 'auto';
+  }
+
+  function addSystemMessage(text) {
+    const msgs = document.getElementById('chat-messages');
+    msgs.innerHTML += `
+      <div style="text-align:center; font-size:11px; color:var(--muted); padding:4px 0;">
+        ${text}
+      </div>
+    `;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    if (activeTab !== 'chat') {
+      unreadCount++;
+      const badge = document.getElementById('unread-badge');
+      badge.textContent = unreadCount;
+      badge.style.display = 'inline';
+    }
+  }
+
+  function chatKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function leaveClass() {
+    if (confirm('آیا از کلاس خارج می‌شوید؟')) {
+      if (jitsiApi) jitsiApi.dispose();
+      location.reload();
+    }
+  }
+
+  function copyInvite() {
+    const link = `برای ورود به کلاس "${currentRoom}" به سایت بروید و این کد را وارد کنید: ${currentRoom}`;
+    navigator.clipboard.writeText(link).then(() => {
+      showToast('🔗 لینک دعوت کپی شد', 'success');
+    }).catch(() => {
+      showToast('لینک: ' + currentRoom, 'info');
+    });
+  }
+
+  function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Init
+  setRole('teacher');
+</script>
+</body>
+</html>
